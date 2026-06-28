@@ -9,7 +9,12 @@
 --   * Every table has RLS enabled. user_locations is owner-only. verifications is
 --     service-role-only so users cannot self-verify.
 
-create extension if not exists postgis;
+-- PostGIS lives in its own schema, out of the exposed API surface (keeps
+-- spatial_ref_sys and PostGIS internals off /rest/v1).
+create schema if not exists extensions;
+create extension if not exists postgis with schema extensions;
+
+set search_path = public, extensions, pg_temp;
 
 -- Private schema for SECURITY DEFINER helpers (never exposed via the Data API).
 create schema if not exists app;
@@ -46,7 +51,7 @@ create index profile_photos_profile_idx on public.profile_photos (profile_id);
 -- the only writer is update_my_location().
 create table public.user_locations (
   profile_id uuid primary key references public.profiles (id) on delete cascade,
-  geog       geography(Point, 4326) not null,
+  geog       extensions.geography(Point, 4326) not null,
   updated_at timestamptz not null default now()
 );
 create index user_locations_geog_idx on public.user_locations using gist (geog);
@@ -129,10 +134,10 @@ $$;
 -- Per-user jitter is stable so repeated queries can't be averaged out to recover
 -- the true point.
 create or replace function app.fuzz_location(p_profile uuid, p_lat double precision, p_lng double precision)
-returns geography
+returns extensions.geography
 language plpgsql
 immutable
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 as $$
 declare
   grid_deg double precision := 0.0015;
@@ -143,13 +148,14 @@ declare
   slat  double precision := round(p_lat / grid_deg) * grid_deg + jlat;
   slng  double precision := round(p_lng / grid_deg) * grid_deg + jlng;
 begin
-  return ST_SetSRID(ST_MakePoint(slng, slat), 4326)::geography;
+  return ST_SetSRID(ST_MakePoint(slng, slat), 4326)::extensions.geography;
 end;
 $$;
 
 create or replace function app.touch_updated_at()
 returns trigger
 language plpgsql
+set search_path = ''
 as $$
 begin
   new.updated_at = now();
@@ -246,10 +252,10 @@ create or replace function public.update_my_location(lat double precision, lng d
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 as $$
 declare
-  fuzzed geography;
+  fuzzed extensions.geography;
 begin
   if auth.uid() is null then
     raise exception 'not authenticated';
@@ -281,11 +287,11 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = public, extensions, pg_temp
 stable
 as $$
 declare
-  me geography;
+  me extensions.geography;
 begin
   select geog into me from public.user_locations where profile_id = auth.uid();
   if me is null then
@@ -338,13 +344,14 @@ $$;
 grant usage on schema app to authenticated;
 grant execute on function app.is_blocked(uuid, uuid) to authenticated;
 
-revoke all on function public.update_my_location(double precision, double precision) from public;
+-- RPCs are the authenticated API surface only — anon is explicitly excluded.
+revoke all on function public.update_my_location(double precision, double precision) from public, anon;
 grant execute on function public.update_my_location(double precision, double precision) to authenticated;
 
-revoke all on function public.nearby_profiles(integer, double precision) from public;
+revoke all on function public.nearby_profiles(integer, double precision) from public, anon;
 grant execute on function public.nearby_profiles(integer, double precision) to authenticated;
 
-revoke all on function public.mark_messages_read(uuid[]) from public;
+revoke all on function public.mark_messages_read(uuid[]) from public, anon;
 grant execute on function public.mark_messages_read(uuid[]) to authenticated;
 
 -- ============================================================================
