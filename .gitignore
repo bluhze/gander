@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# Expo / RN (added when the app is scaffolded)
+.expo/
+dist/
+*.log
+
+# OS
+.DS_Store
