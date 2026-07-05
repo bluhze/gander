@@ -1,0 +1,49 @@
+---
+description: Gander website checklist — legal pages, marketing, and public site content
+alwaysApply: false
+---
+
+# Gander — Website Checklist
+
+Living checklist for public-facing site pages and content. Not in active build scope yet — capture requirements here as they come up.
+
+## Legal & support pages
+
+### Privacy (`/privacy`)
+
+- [x] Create route: `app/privacy/page.tsx`
+- [ ] Write privacy policy content (data collected, location, photos, retention, third parties)
+- [ ] Cover Supabase auth, profile data, and future location/messaging features
+- [x] Add “Last updated” date
+- [x] Link from login page footer and/or settings
+
+### Terms of service (`/terms`)
+
+- [x] Create route: `app/terms/page.tsx`
+- [ ] Write terms content (eligibility 18+, acceptable use, account termination)
+- [x] Add “Last updated” date
+- [x] Link from login page footer and/or settings
+
+### FAQs (`/faqs`)
+
+- [x] Create route: `app/faqs/page.tsx`
+- [ ] Draft FAQ sections (account, profile, safety, how the app works)
+- [x] Link from login page footer and/or help entry point in app
+
+## Login page layout
+
+- [x] Two-column layout: form left, hero video right (`app/page.tsx`)
+- [x] Hero video component — drop file at `public/hero.mp4` (`components/login-hero-video.tsx`)
+- [x] Site footer with FAQs, Privacy, Terms links (`components/site-footer.tsx`)
+
+## Cross-cutting (when these pages ship)
+
+- [x] Shared public layout or simple prose styling (rose/zinc palette, readable typography)
+- [x] Footer or link block on `/` pointing to Privacy, Terms, FAQs
+- [x] Page metadata (`title`, `description`) for each route
+- [ ] Legal review before launch (not a substitute for a lawyer)
+
+## Notes
+
+- Routes should be **public** — no auth required; confirm `proxy.ts` does not redirect them
+- Keep copy in components or markdown files so updates do not require layout changes

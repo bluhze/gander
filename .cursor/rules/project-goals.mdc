@@ -1,0 +1,100 @@
+---
+description: Gander project goals — auth, login, and profile (Goal 1)
+alwaysApply: true
+---
+
+# Gander — Project Goals
+
+Location-based dating app. Stack: **Next.js 16 (App Router)**, **TypeScript**, **Supabase Auth + Postgres**, **Tailwind CSS**. Dev server runs on **port 3001**.
+
+## Goal 1 (current): Login, Auth & Profile
+
+Complete the sign-up/sign-in flow, session protection, and a real user profile page before building discovery, location, or matching features.
+
+### Done
+
+- `/` — login page with email/password sign-in and create-account toggle (`components/login-form.tsx`)
+- Supabase clients: `lib/supabase/client.ts`, `lib/supabase/server.ts`
+- Session + route protection via `proxy.ts` → `lib/supabase/session.ts`
+  - Unauthenticated users on `/app/*` → redirect to `/`
+  - Authenticated users on `/` → redirect to `/app`
+- Auth callback: `app/auth/callback/route.ts` (email confirmation / OAuth code exchange)
+- `/app/profile` — basic stub (email, member since, sign out)
+- App shell with bottom tab nav: Home Feed + Profile (`components/app-nav.tsx`)
+
+### Remaining for Goal 1
+
+#### 1. Finish auth hardening
+
+- [ ] Confirm email flow works end-to-end (sign up → confirm → sign in)
+- [ ] Add `lib/supabase/admin.ts` (service-role, server-only) when server-side profile ops need it
+- [ ] Populate `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` (never `NEXT_PUBLIC_*`)
+- [ ] Link Supabase CLI: `npx supabase login` + `npx supabase link --project-ref vyaztisfdtpxmqdyfqln`
+- [ ] Friendly auth error messages — never leak raw Supabase/Postgres errors to UI
+
+#### 2. Apply profiles schema
+
+- [ ] Add migration `supabase/migrations/dating_app_schema_v2_slim.sql` and run `npx supabase db push`
+- [ ] Generate types: `npx supabase gen types typescript --linked > lib/database.types.ts`
+- [ ] Create private `profile-photos` storage bucket with user-scoped policies
+
+Profile fields (slim v2):
+
+| Field | Column | Rules |
+|---|---|---|
+| Username | `username` (citext) | `^[a-z0-9_]{3,20}$`, check via `username_available()` RPC |
+| Name | `display_name` | 1–30 chars |
+| Age | `date_of_birth` | 18+ enforced by DB; DOB never exposed to other users |
+| Bio | `bio` | ≤ 500 chars |
+| Photo | `photo_path` | private bucket, served via signed URLs only |
+
+#### 3. Data layer
+
+Create `lib/data/profiles.ts` with typed helpers:
+
+- `checkUsernameAvailable(username)` → `username_available` RPC
+- `createProfile({ username, displayName, dateOfBirth, bio? })`
+- `updateProfile(patch)` — own row only
+- `uploadProfilePhoto(file)` — jpeg/png/webp, ≤ 5 MB, path `{uid}/avatar.{ext}`
+- `getSignedPhotoUrl(photoPath)` — server-side, ~60 min TTL
+
+#### 4. Onboarding + profile UI
+
+- [ ] `/onboarding` — multi-step: username (debounced availability) → name + DOB → bio → photo
+- [ ] Redirect new users without a `profiles` row to `/onboarding` (in `proxy.ts` or page guard)
+- [ ] Upgrade `/app/profile` to show and edit: username, display name, bio, photo preview
+- [ ] Keep sign out on profile page (`components/sign-out-button.tsx`)
+
+#### 5. Goal 1 verification
+
+- [ ] New user: sign up → onboarding → lands on `/app` with profile complete
+- [ ] Returning user: sign in → `/app` (skip onboarding if profile exists)
+- [ ] Protected routes reject unauthenticated access
+- [ ] Username collision and under-18 DOB return friendly errors
+- [ ] Profile photo upload rejects wrong type/size before upload
+
+## Conventions
+
+- TypeScript strict; no `any` in data layer
+- Match existing UI: rose/zinc palette, rounded-xl cards, bottom tab nav
+- Privacy: raw lat/lng never reach the client (relevant for later goals, not Goal 1)
+- Service role key: server-only imports (`lib/supabase/admin.ts`, route handlers, server actions)
+- Do not redesign the migration SQL — private schema + RPC pattern is intentional
+
+## Key paths
+
+```
+app/page.tsx              → login
+app/app/page.tsx          → home feed (done, out of Goal 1 scope)
+app/app/profile/page.tsx  → profile (expand in Goal 1)
+app/onboarding/           → create (Goal 1)
+proxy.ts                  → auth redirects
+components/login-form.tsx
+lib/supabase/
+lib/data/profiles.ts      → create (Goal 1)
+```
+
+## Future goals (not in scope yet)
+
+- Goal 2: Location + nearby profiles grid (`update_my_location`, `nearby_profiles` RPCs)
+- Goal 3: Matching, messaging, notifications

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff1f2"/>
+      <stop offset="55%" stop-color="#fecdd3"/>
+      <stop offset="100%" stop-color="#fdba74"/>
+    </linearGradient>
+    <linearGradient id="table" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#sky)"/>
+  <circle cx="980" cy="120" r="70" fill="#fb7185" opacity="0.35"/>
+  <rect x="0" y="430" width="1200" height="245" fill="#fff7ed"/>
+  <ellipse cx="600" cy="430" rx="420" ry="28" fill="#fdba74" opacity="0.35"/>
+  <rect x="260" y="360" width="680" height="24" rx="12" fill="url(#table)"/>
+  <rect x="340" y="250" width="120" height="110" rx="18" fill="#fff" stroke="#fda4af" stroke-width="4"/>
+  <rect x="740" y="250" width="120" height="110" rx="18" fill="#fff" stroke="#fda4af" stroke-width="4"/>
+  <path d="M380 250c0-28 22-50 50-50h90c28 0 50 22 50 50" stroke="#fb7185" stroke-width="8" stroke-linecap="round"/>
+  <path d="M780 250c0-28 22-50 50-50h90c28 0 50 22 50 50" stroke="#fb7185" stroke-width="8" stroke-linecap="round"/>
+  <ellipse cx="400" cy="300" rx="34" ry="10" fill="#fecdd3"/>
+  <ellipse cx="800" cy="300" rx="34" ry="10" fill="#fecdd3"/>
+  <circle cx="520" cy="210" r="42" fill="#fecaca"/>
+  <circle cx="680" cy="210" r="42" fill="#fdba74"/>
+  <path d="M500 205c18-18 44-18 62 0" stroke="#be123c" stroke-width="6" stroke-linecap="round"/>
+  <path d="M660 205c18-18 44-18 62 0" stroke="#9a3412" stroke-width="6" stroke-linecap="round"/>
+  <path d="M520 250c16 10 34 10 50 0" stroke="#be123c" stroke-width="5" stroke-linecap="round"/>
+  <path d="M680 250c16 10 34 10 50 0" stroke="#9a3412" stroke-width="5" stroke-linecap="round"/>
+  <rect x="430" y="300" width="340" height="18" rx="9" fill="#fb7185" opacity="0.25"/>
+  <circle cx="600" cy="309" r="8" fill="#fb7185"/>
+</svg>
