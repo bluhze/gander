@@ -1,0 +1,70 @@
+---
+description: Project context — what we're building, who for, and the non-negotiables
+alwaysApply: true
+---
+
+# Project: Gander (working name)
+
+## What it is
+A location-based dating app for gay men — users discover and connect with nearby people, view profiles, and message in real time.
+
+## Goals
+**North star:** A new user near other users can go from app open → first sent message in one session, and come back the next day.
+
+**v1 success criteria (measurable):**
+- Growth: steady week-over-week signup growth; >60% of signups complete profile + age verification.
+- Activation: >40% of new users send a message within their first session.
+- Engagement: D1 retention >35%, D7 >20%; median active user opens the app ≥3 days/week.
+- Safety floor (gates everything above): location provably non-trilaterable in pen test; reports actioned <24h. Growth never ships at the cost of these — see Non-negotiables.
+
+Non-goals for v1 are covered under **Out of scope** — don't relitigate scope to chase a metric.
+
+## Users
+Primary: gay men (18+) looking to meet, date, or connect locally. Broad audience — both casual and relationship-focused; no narrower niche in v1.
+
+## Core loop
+Open app → browse distance-sorted grid of nearby users → open a profile → like/message → chat.
+
+## Platforms
+iOS + Android from a single codebase. No web app for v1.
+<!-- Stack: React Native + Expo (recommended). Lock in during the stack phase. -->
+
+## MVP features
+- Account creation + auth
+- Profile (photos, bio, attributes)
+- Location-based discovery — **distance-sorted browse grid** (Grindr-style), with basic filters
+- Likes / favorites
+- Real-time 1:1 messaging — text + images, typing indicators, read receipts (no voice/video in v1)
+- Blocking + reporting
+- Age gate (18+) + third-party identity/photo verification
+
+## Non-negotiables — safety & privacy (architectural constraints, NOT features to bolt on later)
+- **Never expose exact location.** Coordinates are fuzzed/snapped server-side; the client only ever receives coarse distance, and precision is capped to prevent trilateration (a real, documented attack against apps in this category).
+- Let users hide distance / show approximate area only.
+- Treat the user database as high-sensitivity. For this audience, an outing is a safety incident — including in regions where being gay is criminalized. Encrypt at rest, minimize retention, least-privilege access.
+- Mandatory 18+ age verification.
+- Strong moderation: one-tap reporting, instant blocking, an abuse-review pipeline.
+- Photo / identity verification to reduce catfishing and bad actors — via third-party KYC/age vendor (e.g. Persona, Veriff, Yoti), not built in-house.
+
+## Launch markets
+v1: US + Western Europe. Threat model is designed as if hostile/criminalized regions are in scope eventually — security bar assumes state-level adversaries, even where we don't launch first. Drives GDPR compliance, data-residency choices, and age-verification law.
+
+## Monetization
+Freemium: free core + premium subscription. Paywalled in v1: who-liked-you, incognito / hide-distance browsing, extended reach (see more / further profiles), advanced filters. Core discovery + messaging stay free.
+
+## Scale, budget, timeline (assumption — veto if wrong)
+Solo founder / tiny team shipping to real users. Lean MVP, ~3-month target to v1. Managed-services-first to maximize speed and minimize ops; optimize the geo and infra layers only when usage demands it.
+
+## Out of scope for v1
+Voice/video chat, web app, events or group features, profile albums / private-photo sharing, advanced matching algorithms, in-app purchases beyond the single premium subscription.
+
+## Tech stack
+Managed-services-first. Locked for v1:
+- **Client:** React Native + Expo — one codebase (iOS + Android), OTA updates, Expo Push for notifications.
+- **Backend:** Supabase — Postgres (with **PostGIS** for geo), **Row Level Security** for the high-sensitivity user DB, Realtime for messaging, Auth (email + Apple/Google sign-in), Storage for photos, Edge Functions for webhooks/secret-holding work.
+- **Geo fuzzing:** PostGIS + server-side RPCs snap/round coordinates; client only ever receives coarse distance. Enforces the location non-negotiable.
+- **Age/identity verification:** third-party KYC vendor (Persona or Veriff — decide at verification phase). Not built in-house.
+
+Rationale: RLS + PostGIS give provable least-privilege access and real server-side geo math — the right primitives for this threat model — in one managed platform a solo founder can run. Chosen over Firebase (weaker geo + access-control fit) and roll-your-own (too much ops).
+
+Known later-optimization: Supabase Realtime is fine for v1 messaging scale; revisit only if chat volume demands it.
